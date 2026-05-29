@@ -1,6 +1,6 @@
 ---
 name: notion-eisenhower
-description: Sistema completo de produtividade no Notion com Matriz de Eisenhower, ritual matinal, captura mágica de tarefas/ideias/projetos, fechamento do dia e relatório semanal. Use quando o usuário quiser organizar tarefas, adicionar tarefa, capturar ideias, planejar o dia, fechar o dia, ver seu dashboard, gerar relatório semanal, criar workspace no Notion, ou qualquer variação como "adiciona tarefa", "minha prioridade de hoje", "captura isso", "como foi meu dia", "relatório da semana", "coloca no notion", "minha lista", "o que devo fazer hoje".
+description: Sistema completo de produtividade com Matriz de Eisenhower integrado ao Notion e Google Calendar. Gerencia tarefas, projetos, ideias e compromissos de agenda. Use quando o usuário quiser organizar tarefas, adicionar tarefa, capturar ideias ou compromissos, planejar o dia, fechar o dia, ver relatório semanal, adicionar evento na agenda, ou qualquer variação como "adiciona tarefa", "minha prioridade de hoje", "captura isso", "como foi meu dia", "coloca na agenda", "marca no calendario", "relatório da semana", "o que devo fazer hoje".
 ---
 
 # Sistema de Produtividade: Notion + Matriz de Eisenhower
@@ -34,6 +34,7 @@ Responda sempre em **português brasileiro**. Tom: direto, encorajador, sem enro
 | **morning** | "bom dia", "por onde começo", "meu dia", "prioridades hoje", "ritual matinal" |
 | **capture** | "anota isso", "captura", "tenho várias coisas", lista de pensamentos soltos |
 | **add-task** | "adiciona tarefa", uma única tarefa específica |
+| **add-event** | "coloca na agenda", "marca no calendário", "agendar", evento com horário específico |
 | **evening** | "fechando o dia", "como foi", "finalizei", "o que fiz hoje" |
 | **update** | "atualiza", "reclassifica", "sincroniza" |
 | **weekly-report** | "relatório semanal", "resumo da semana", "o que fiz essa semana" |
@@ -147,9 +148,11 @@ Use `notion-create-pages` com:
 
 ### Processo
 
-1. Use `notion-fetch` no banco Tarefas. Filtre: Status ≠ ✅ Concluído.
+1. Em paralelo, busque:
+   - `notion-fetch` no banco Tarefas (Status ≠ ✅ Concluído)
+   - `google-calendar-list-events` com startTime = início do dia atual e endTime = fim do dia atual (timeZone: America/Sao_Paulo)
 
-2. Identifique:
+2. Identifique nas tarefas:
    - Tarefas com prazo **hoje** → destaque máximo
    - Todas as tarefas **Q1** abertas
    - Top 3 do dia anterior ainda marcadas → limpe o checkbox
@@ -159,6 +162,11 @@ Use `notion-create-pages` com:
 ```
 ☀️ BOM DIA, [NOME]!
 [dia da semana, data]
+
+📅 SUA AGENDA DE HOJE:
+• [horário] — [evento]
+• [horário] — [evento]
+(se não houver eventos: "Agenda livre hoje!")
 
 ⚠️ VENCE HOJE:
 • [tarefa] — [projeto]
@@ -174,7 +182,7 @@ Use `notion-create-pages` com:
 ─────────────────────────
 🎯 SEUS TOP 3 DE HOJE
 
-Sugiro:
+Sugiro (considerando seus compromissos de agenda):
 1. [tarefa mais urgente/importante]
 2. [segunda mais crítica]
 3. [avanço estratégico Q2]
@@ -204,9 +212,12 @@ Confirma esses 3 ou quer trocar algum?
    > "Fala tudo que está na sua cabeça. Tarefas, ideias, projetos, recados. Qualquer coisa. Pode ser bagunçado."
 
 2. Receba o texto livre. Para cada item, classifique:
-   - **Tarefa**: tem ação clara + possível prazo → vai para 📋 Tarefas
-   - **Ideia**: conceito sem ação imediata → vai para 💡 Ideias
-   - **Projeto**: múltiplas etapas, objetivo maior → vai para 📁 Projetos
+   - **Tarefa**: tem ação clara + possível prazo, sem horário fixo → vai para 📋 Tarefas (Notion)
+   - **Evento/Compromisso**: tem horário específico OU é recorrente (reunião, consulta, aula, voluntariado, rotina pessoal) → vai para 📅 Google Calendar
+   - **Ideia**: conceito sem ação imediata → vai para 💡 Ideias (Notion)
+   - **Projeto**: múltiplas etapas, objetivo maior → vai para 📁 Projetos (Notion)
+
+   **Regra de ouro para Evento vs Tarefa:** se tem hora marcada ou repete com frequência fixa → Calendar. Se é uma ação a executar sem horário específico → Tarefas.
 
 3. Para tarefas: calcule urgência e quadrante automaticamente.
 
@@ -217,26 +228,67 @@ Confirma esses 3 ou quer trocar algum?
 ```
 🧠 CLASSIFIQUEI [N] ITENS:
 
-📋 TAREFAS ([N]):
+📋 TAREFAS ([N]) → Notion:
 • [tarefa] → 🔴 Q1 — prazo: [data] — Projeto: [nome]
 • [tarefa] → 🟡 Q2 — prazo: [data]
 • ...
 
-📁 PROJETOS ([N]):
+📅 AGENDA ([N]) → Google Calendar:
+• [evento] — [dia/horário] — [recorrente? sim/não]
+• ...
+
+📁 PROJETOS ([N]) → Notion:
 • [projeto] — Próximo passo: [ação concreta]
 • ...
 
-💡 IDEIAS ([N]):
+💡 IDEIAS ([N]) → Notion:
 • [ideia] — Potencial: [Alto/Médio/Embrião]
 • ...
 
-Posso ajustar algum antes de salvar no Notion?
+Posso ajustar algum antes de salvar?
 ```
 
 6. Após confirmação:
-   - Use `notion-search` para encontrar os bancos
-   - Use `notion-create-pages` para criar cada item no banco correto
+   - Tarefas/Projetos/Ideias: use `notion-search` + `notion-create-pages` nos bancos corretos
+   - Eventos: use `google-calendar-create-event` com os campos:
+     - summary: nome do evento
+     - startTime / endTime: horários no formato ISO 8601
+     - timeZone: "America/Sao_Paulo"
+     - recurrenceData: ["RRULE:FREQ=WEEKLY;BYDAY=FR"] para recorrentes semanais, ["RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR"] para múltiplos dias, etc.
+     - overrideReminders: [{"method": "popup", "minutes": 30}] como padrão
    - Para projetos novos: pergunte "Quer que eu quebre esse projeto em tarefas e já adicione ao Q2?"
+
+---
+
+## MODO: ADD-EVENT (Evento na Agenda)
+
+Para adicionar um compromisso com horário específico ou recorrente ao Google Calendar.
+
+### Processo
+
+1. Colete (aceite linguagem natural):
+   - Nome do evento
+   - Data e horário de início e fim
+   - Local (opcional)
+   - Recorrência (toda semana? todo mês? dias específicos?)
+
+2. Para recorrência, mapeie:
+   - "toda semana na [dia]" → RRULE:FREQ=WEEKLY;BYDAY=[XX]
+   - "toda segunda e quarta" → RRULE:FREQ=WEEKLY;BYDAY=MO,WE
+   - "todo mês no dia X" → RRULE:FREQ=MONTHLY;BYMONTHDAY=X
+   - "uma vez só" → sem recorrência
+
+3. Use `google-calendar-create-event` com timeZone: "America/Sao_Paulo"
+
+4. Confirme:
+```
+✅ Evento criado na agenda!
+📅 [Nome do evento]
+🕐 [horário início] às [horário fim]
+📍 [local, se informado]
+🔁 [Recorrência ou "Único"]
+🔔 Lembrete: 30 min antes
+```
 
 ---
 
@@ -395,8 +447,9 @@ Semana [N] · [data início] a [data fim]
 
 ---
 
-## Ferramentas Notion MCP disponíveis
+## Ferramentas disponíveis
 
+### Notion MCP
 - `notion-search` — buscar páginas e bancos de dados por nome
 - `notion-fetch` — buscar conteúdo de uma página ou banco (incluindo registros/filhos)
 - `notion-create-database` — criar banco de dados (equivalente a uma tabela)
@@ -405,6 +458,16 @@ Semana [N] · [data início] a [data fim]
 - `notion-create-view` — criar nova view em um banco de dados
 - `notion-update-view` — atualizar uma view existente
 - `notion-move-pages` — mover páginas entre seções
+
+### Google Calendar MCP
+- `google-calendar-create-event` — criar evento (único ou recorrente via RRULE)
+- `google-calendar-list-events` — listar eventos de um período (use para morning mode)
+- `google-calendar-update-event` — atualizar evento existente
+- `google-calendar-delete-event` — remover evento
+- `google-calendar-list-calendars` — listar calendários disponíveis
+
+**Timezone padrão:** sempre usar `America/Sao_Paulo` em todos os eventos.
+**RRULE dias:** MO=segunda, TU=terça, WE=quarta, TH=quinta, FR=sexta, SA=sábado, SU=domingo.
 
 ## Dicas de implementação
 
