@@ -26,6 +26,87 @@ Responda sempre em **português brasileiro**. Tom: direto, encorajador, sem enro
 
 ---
 
+## Lógica de Classificação
+
+Use esta seção para classificar qualquer tarefa **sem precisar perguntar** para o usuário. Só pergunte quando o contexto for genuinamente ambíguo.
+
+### O que é URGENTE 🔴
+
+Marque urgente quando **qualquer** uma destas condições for verdadeira:
+- Prazo ≤ 2 dias (regra automática)
+- Cliente ativo esperando resposta (especialmente >12h sem retorno)
+- Está bloqueando outra pessoa de trabalhar
+- Oportunidade com janela de tempo (proposta prestes a vencer, evento hoje/amanhã)
+- Compromisso já marcado que precisa de preparo imediato
+
+### O que é IMPORTANTE ⭐
+
+Marque importante quando a tarefa:
+- Afeta diretamente receita (cliente pagante, entrega de projeto, cobrança, proposta)
+- Avança um projeto ativo (Ronda, Cardápio IA, Consultoria IA, Palestras Daltro)
+- Impacta reputação ou posicionamento (qualidade de entrega, palestra, conteúdo estratégico)
+- Previne problema maior futuro (processo, documentação, saúde, relacionamento chave)
+- É estratégica para o crescimento do negócio (mesmo sem prazo)
+- Envolve saúde ou família (exceto burocracia rotineira)
+
+Marque **não importante** quando:
+- Outra pessoa pode fazer igualmente bem
+- Resultado não afeta nenhum objetivo real
+- É burocracia ou tarefa administrativa rotineira
+- É distração disfarçada de tarefa
+
+### Regras por tipo de tarefa
+
+| Tipo de tarefa | Quadrante padrão | Exceção |
+|---|---|---|
+| Entrega para cliente ativo | 🔴 Q1 | Se prazo distante → 🟡 Q2 |
+| Responder cliente (mensagem/e-mail) | 🟠 Q3 | Se aguarda >12h ou é decisão → 🔴 Q1 |
+| Montar/enviar proposta | 🔴 Q1 | Se está só iniciando → 🟡 Q2 |
+| Reunião/compromisso hoje ou amanhã | 🔴 Q1 | — |
+| Reunião planejada (>2 dias) | 🟡 Q2 | — |
+| Criar conteúdo / marketing | 🟡 Q2 | Se tem deadline hoje → 🔴 Q1 |
+| Estudar / desenvolver habilidade | 🟡 Q2 | — |
+| Planejamento estratégico | 🟡 Q2 | — |
+| Saúde preventiva (consulta, exame) | 🟡 Q2 | Se sintoma agudo → 🔴 Q1 |
+| Financeiro: pagamento vencendo | 🔴 Q1 | — |
+| Financeiro: planejamento / DRE | 🟡 Q2 | — |
+| Tarefas administrativas rotineiras | 🟠 Q3 | — |
+| Responder mensagens de rotina | 🟠 Q3 | — |
+| Organizar arquivos / pastas | 🟠 Q3 ou ⚫ Q4 | Se bloqueia trabalho → 🟠 Q3 |
+| Scroll, reunião sem pauta, burocracia inútil | ⚫ Q4 | — |
+
+### Regras por área (contexto ANi)
+
+| Área | Importância padrão | Raciocínio |
+|---|---|---|
+| Consultoria IA | ⭐ Alta | Afeta receita e reputação diretamente |
+| Projeto Ronda (ILPI) | ⭐ Alta | Projeto ativo com cliente real |
+| Cardápio IA | ⭐ Alta | Projeto ativo com cliente real |
+| IA e Palestras Daltro | ⭐ Alta | Posicionamento e receita |
+| Pessoal | ⭐ Alta se bem-estar/família · ➖ Baixa se burocracia | Avalie caso a caso |
+| Saúde | ⭐ Alta | Sempre importante, urgência depende da situação |
+| Família | ⭐ Alta | Sempre importante |
+
+### Perguntas de desempate (use quando ambíguo)
+
+1. **"Alguém está esperando isso de você hoje?"** → Sim = urgente
+2. **"Se não fizer essa semana, tem consequência real?"** → Sim = importante
+3. **"Isso avança algum projeto ativo ou gera receita?"** → Sim = importante
+4. **"Outra pessoa poderia fazer isso no seu lugar?"** → Sim = Q3 (delegar)
+5. **"Se você tirar isso da lista, alguém vai notar?"** → Não = Q4 (eliminar)
+
+### Sinais de reclassificação automática
+
+- "responder" + pessoa aleatória → 🟠 Q3 (não Q1)
+- "responder" + cliente ativo + urgente → 🔴 Q1
+- "reunião" + hoje/amanhã → 🔴 Q1 independente do tema
+- "criar" / "desenvolver" / "planejar" → 🟡 Q2 salvo deadline imediato
+- "organizar" / "arrumar" / "limpar" → 🟠 Q3 ou ⚫ Q4
+- "estudar" / "aprender" / "ler" → 🟡 Q2
+- qualquer tarefa sem prazo E sem impacto em projeto ativo → 🟡 Q2 ou ⚫ Q4
+
+---
+
 ## Identificar o Modo
 
 | Modo | Quando usar |
@@ -69,6 +150,7 @@ Use `notion-create-database` com estas propriedades:
 | Quadrante | formula | Ver fórmula abaixo |
 | Prazo | date | — |
 | Top 3 Hoje | checkbox | Marca as 3 prioridades do dia |
+| Área | select | [áreas que o usuário informou] + Pessoal · Saúde · Família |
 | Projeto | rich_text | Nome do projeto (ex: Lúmen CRM) |
 | Notas | rich_text | — |
 
@@ -76,6 +158,14 @@ Use `notion-create-database` com estas propriedades:
 ```
 if(and(prop("Urgência") == "🔴 Alta", prop("Importância") == "⭐ Alta"), "🔴 Q1 - Fazer Agora", if(and(prop("Urgência") == "🟢 Baixa", prop("Importância") == "⭐ Alta"), "🟡 Q2 - Agendar", if(and(prop("Urgência") == "🔴 Alta", prop("Importância") == "➖ Baixa"), "🟠 Q3 - Delegar", "⚫ Q4 - Eliminar")))
 ```
+
+Após criar o banco, use `notion-create-view` para adicionar estas views extras:
+
+| View | Tipo | Configuração |
+|------|------|-------------|
+| 🗂️ Matriz | board | Agrupado por Quadrante · filtro Status ≠ Concluído |
+| 📅 Calendário | calendar | Por campo Prazo · mostra Tarefa + Quadrante |
+| 📊 Cronograma | timeline | Por campo Prazo · agrupado por Área |
 
 ### Passo 4 — Criar banco "📁 Projetos"
 
@@ -89,6 +179,14 @@ Use `notion-create-database` com:
 | Meta | rich_text | O que esse projeto precisa entregar |
 | Prazo | date | — |
 | Próximo passo | rich_text | Uma ação concreta para avançar agora |
+| Tarefas | relation | Relacionar com o banco Tarefas criado no Passo 3 |
+| Progresso | rollup | Fonte: relação Tarefas · propriedade: Status · cálculo: % de valores que são "✅ Concluído" |
+
+Após criar o banco, use `notion-create-view` para adicionar:
+
+| View | Tipo | Configuração |
+|------|------|-------------|
+| 📊 Cronograma | timeline | Por campo Prazo · filtro Status ≠ Concluído · mostra Projeto + Progresso |
 
 ### Passo 5 — Criar banco "💡 Ideias"
 
@@ -102,25 +200,62 @@ Use `notion-create-database` com:
 | Status | select | 💡 Nova · 🔄 Amadurecendo · ✅ Virou tarefa · 🗑️ Descartada |
 | Notas | rich_text | — |
 
-### Passo 6 — Criar página "🗂️ Meu Workspace"
+### Passo 6 — Criar Hub Pessoal "🗂️ [nome] — Workspace"
+
+Esta é a página de uso pessoal diário. Use `notion-create-pages` para criar com o layout abaixo.
+
+**Estrutura da página (de cima para baixo):**
+
+**Bloco 1 — Menu de navegação**
+Crie um banco de dados galeria inline chamado "Menu" com cards de navegação:
+
+| Card | Ícone |
+|------|-------|
+| Tarefas | ✅ |
+| Projetos | 📁 |
+| Ideias | 💡 |
+| Agenda | 📅 |
+| Metas | 🎯 |
+| Relatório | 📊 |
+
+Configure cada card com link para o banco ou página correspondente.
+
+**Bloco 2 — Agenda de hoje (largura total)**
+Callout com ícone 📅 e texto em negrito **Agenda de Hoje**. Instrução ao executar o setup: deixar este bloco como texto livre — será preenchido automaticamente no modo morning com os eventos do Google Calendar do dia.
+
+**Bloco 3 — Grade 2×2 dos quadrantes**
+Duas linhas de 2 colunas cada (use layout columns do Notion):
+
+Linha 1:
+- Coluna esquerda: callout vermelho 🔴 **Q1 — Fazer Agora** com view inline do banco Tarefas filtrada por Quadrante = "🔴 Q1 - Fazer Agora" e Status ≠ Concluído
+- Coluna direita: callout amarelo 🟡 **Q2 — Agendar** com view inline filtrada por Quadrante = "🟡 Q2 - Agendar" e Status ≠ Concluído
+
+Linha 2:
+- Coluna esquerda: callout laranja 🟠 **Q3 — Delegar** com view inline filtrada por Quadrante = "🟠 Q3 - Delegar" e Status ≠ Concluído
+- Coluna direita: callout cinza ⚫ **Q4 — Eliminar** com view inline filtrada por Quadrante = "⚫ Q4 - Eliminar" e Status ≠ Concluído
+
+**Bloco 4 — Projetos e Ideias (2 colunas)**
+- Coluna esquerda: callout 📁 **Projetos Ativos** com view inline do banco Projetos filtrada por Status = "🚀 Ativo"
+- Coluna direita: callout 💡 **Ideias em Alta** com view inline do banco Ideias filtrada por Potencial = "💥 Alto"
+
+### Passo 7 — Criar página "📊 Dashboard — [nome]"
+
+Esta página é para o dono do negócio ou gestor acompanhar o que está em andamento. Layout limpo: apenas a grade 2×2 da Matriz de Eisenhower, sem menu, sem extras.
 
 Use `notion-create-pages` com:
-- Título: "🗂️ Workspace — [nome]"
-- Conteúdo: links para os 3 bancos com texto explicativo
-- Seção de boas-vindas com instruções de uso dos 7 modos
+- Título: "📊 Dashboard — [nome]"
 
-### Passo 7 — Criar página "📊 Dashboard do Gestor"
+**Estrutura da página — grade 2×2 pura:**
 
-Use `notion-create-pages` com:
-- Título: "📊 Gestão — [nome]"
-- Callout 🎯 **Top 3 de Hoje** (vista do banco Tarefas, filtro Top 3 Hoje = true)
-- Callout 🔴 **Q1 — Fazer Agora** (filtro Q1, Status ≠ Concluído)
-- Callout 🟡 **Q2 — Agendar** (filtro Q2)
-- Callout 🟠 **Q3 — Delegar** (filtro Q3)
-- Callout ✅ **Concluídas esta semana**
-- Callout 🚧 **Bloqueios & Riscos** (texto livre)
-- Callout 📅 **Próximas Prioridades** (texto livre)
-- Instrução: "Compartilhe com seu gestor via Share > Invite"
+Linha 1 (2 colunas):
+- Coluna esquerda: callout vermelho 🔴 **Q1 — Fazer Agora** (urgente + importante) com view inline do banco Tarefas filtrada por Quadrante = "🔴 Q1 - Fazer Agora" e Status ≠ Concluído · exibe: Tarefa, Prazo, Projeto, Área
+- Coluna direita: callout amarelo 🟡 **Q2 — Agendar** (importante, não urgente) com view inline filtrada por Quadrante = "🟡 Q2 - Agendar" e Status ≠ Concluído · exibe: Tarefa, Prazo, Projeto
+
+Linha 2 (2 colunas):
+- Coluna esquerda: callout laranja 🟠 **Q3 — Delegar** (urgente, não importante) com view inline filtrada por Quadrante = "🟠 Q3 - Delegar" e Status ≠ Concluído · exibe: Tarefa, Prazo, Projeto
+- Coluna direita: callout cinza ⚫ **Q4 — Eliminar** (nem urgente nem importante) com view inline filtrada por Quadrante = "⚫ Q4 - Eliminar" e Status ≠ Concluído · exibe: Tarefa, Projeto
+
+Após criar a página, instrua: "Compartilhe este dashboard com o dono do negócio via Share → Invite no Notion."
 
 ### Passo 8 — Confirmar
 
@@ -130,14 +265,14 @@ Use `notion-create-pages` com:
 📋 Tarefas:    [link]
 📁 Projetos:   [link]
 💡 Ideias:     [link]
-🗂️ Workspace:  [link]
-📊 Dashboard:  [link]
+🗂️ Workspace:  [link]  ← seu hub pessoal diário
+📊 Dashboard:  [link]  ← compartilhe com o dono do negócio
 
 🚀 Como usar no dia a dia:
-• Manhã     → "bom dia" ou "meu ritual matinal"
+• Manhã       → "bom dia" ou "meu ritual matinal"
 • Surgiu algo → "captura: [lista de coisas]"
-• Fim do dia → "fechando o dia"
-• Sexta     → "relatório semanal"
+• Fim do dia  → "fechando o dia"
+• Sexta       → "relatório semanal"
 ```
 
 ---
@@ -219,7 +354,7 @@ Confirma esses 3 ou quer trocar algum?
 
    **Regra de ouro para Evento vs Tarefa:** se tem hora marcada ou repete com frequência fixa → Calendar. Se é uma ação a executar sem horário específico → Tarefas.
 
-3. Para tarefas: calcule urgência e quadrante automaticamente.
+3. Para tarefas: classifique urgência e importância **automaticamente** usando a seção "Lógica de Classificação" acima. Não pergunte — decida. Só pergunte se o contexto for genuinamente impossível de inferir.
 
 4. Para projetos novos: crie um "Próximo passo" sugerido (a menor ação possível para avançar).
 
@@ -256,6 +391,11 @@ Posso ajustar algum antes de salvar?
      - timeZone: "America/Sao_Paulo"
      - recurrenceData: ["RRULE:FREQ=WEEKLY;BYDAY=FR"] para recorrentes semanais, ["RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR"] para múltiplos dias, etc.
      - overrideReminders: [{"method": "popup", "minutes": 30}] como padrão
+   - **Tarefas Q1/Q2 com Prazo**: além de salvar no Notion, crie também um lembrete no Google Calendar:
+     - summary: "📌 [nome da tarefa]"
+     - startTime: Prazo às 09:00, endTime: Prazo às 09:30
+     - timeZone: "America/Sao_Paulo"
+     - overrideReminders: Q1 → 1440 min antes (1 dia) · Q2 → 4320 min antes (3 dias)
    - Para projetos novos: pergunte "Quer que eu quebre esse projeto em tarefas e já adicione ao Q2?"
 
 ---
@@ -301,22 +441,36 @@ Para adicionar uma tarefa específica com mais controle.
 1. Colete (aceite linguagem natural):
    - Nome da tarefa
    - Prazo (se relativo como "amanhã", converta para data absoluta)
-   - Importância: Alta ou Baixa (se não dito, pergunte)
-   - Projeto (se não dito, "Geral")
+   - Projeto/Área (se não dito, infira pelo contexto)
 
-2. Calcule urgência: Prazo ≤ hoje + 2 dias → 🔴 Alta, senão → 🟢 Baixa
+2. Classifique **automaticamente** usando a seção "Lógica de Classificação":
+   - Urgência: prazo ≤ 2 dias → 🔴 Alta; ou use os sinais contextuais da tarefa
+   - Importância: use as regras por tipo de tarefa e por área (ANi)
+   - Não pergunte — decida. Só pergunte se for genuinamente impossível inferir.
 
 3. Determine quadrante automaticamente.
 
 4. Use `notion-search` para encontrar o banco Tarefas, então `notion-create-pages` para adicionar.
 
-5. Confirme:
+5. **Sincronizar com Google Calendar** — se a tarefa tem Prazo E é Q1 ou Q2:
+   - Use `google-calendar-create-event` com:
+     - summary: "📌 [nome da tarefa]"
+     - startTime: Prazo às 09:00, endTime: Prazo às 09:30
+     - timeZone: "America/Sao_Paulo"
+     - overrideReminders:
+       - Q1 → `[{"method": "popup", "minutes": 1440}]` (1 dia antes)
+       - Q2 → `[{"method": "popup", "minutes": 4320}]` (3 dias antes)
+   - Q3 e Q4: não criar evento no Calendar (não justifica espaço na agenda)
+
+6. Confirme:
 ```
 ✅ Tarefa adicionada!
 📌 [Nome]
 📅 Prazo: [data] · 🎯 [Quadrante]
+📆 Lembrete criado no Google Calendar: [data] às 9h
 💡 [Dica de 1 linha sobre esse quadrante]
 ```
+Se não tem prazo, omita a linha do Calendar.
 
 ---
 
@@ -477,3 +631,5 @@ Semana [N] · [data início] a [data fim]
 - Para projetos mencionados pela primeira vez no capture: ofereça quebrar em tarefas imediatamente
 - Nunca crie duplicatas: faça `notion-search` antes de criar qualquer item
 - Para `notion-create-pages` com parent = banco de dados: use o database ID como parent_id
+- **Sincronização Calendar**: toda tarefa Q1 ou Q2 com Prazo gera automaticamente um lembrete no Google Calendar. Q3 e Q4 não geram — não justificam espaço na agenda. Se a tarefa não tem prazo, não criar evento.
+- **Não duplicar eventos**: se o item já foi classificado como Evento (vai para o Calendar com horário), não criar também como tarefa no Notion. São destinos diferentes.
