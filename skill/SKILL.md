@@ -1,6 +1,6 @@
 ---
 name: notion-eisenhower
-description: Sistema completo de produtividade no Notion com Matriz de Eisenhower, ritual matinal, captura mágica de tarefas/ideias/projetos, fechamento do dia e relatório semanal. Use quando o usuário quiser organizar tarefas, adicionar tarefa, capturar ideias, planejar o dia, fechar o dia, ver seu dashboard, gerar relatório semanal, criar workspace no Notion, ou qualquer variação de: "adiciona tarefa", "minha prioridade de hoje", "captura isso", "como foi meu dia", "relatório da semana", "coloca no notion", "minha lista", "o que devo fazer hoje".
+description: Sistema completo de produtividade no Notion com Matriz de Eisenhower, ritual matinal, captura mágica de tarefas/ideias/projetos, fechamento do dia e relatório semanal. Use quando o usuário quiser organizar tarefas, adicionar tarefa, capturar ideias, planejar o dia, fechar o dia, ver seu dashboard, gerar relatório semanal, criar workspace no Notion, ou qualquer variação como "adiciona tarefa", "minha prioridade de hoje", "captura isso", "como foi meu dia", "relatório da semana", "coloca no notion", "minha lista", "o que devo fazer hoje".
 ---
 
 # Sistema de Produtividade: Notion + Matriz de Eisenhower
